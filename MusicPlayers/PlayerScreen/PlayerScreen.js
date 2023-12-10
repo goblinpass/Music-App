@@ -16,18 +16,16 @@ const PlayerScreen = ({ route }) => {
 
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const togglePlayPause = async () => {
+  const endpoint = isPlaying
+      ? 'https://api.spotify.com/v1/me/player/pause'
+      : 'https://api.spotify.com/v1/me/player/play';
     try {
-      const response = await axios.put(
-        'https://api.spotify.com/v1/me/player/play',
-        null,
-        {
+        await axios.put(endpoint, null, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
-          },
-        }
-      );
+        },
+      }),
 
       setIsPlaying(!isPlaying);
     } catch (error) {
@@ -37,7 +35,7 @@ const PlayerScreen = ({ route }) => {
 
   const skipNext = async () => {
     try {
-      const response = await axios.post(
+      await axios.post(
         'https://api.spotify.com/v1/me/player/next',
         null,
         {
@@ -47,7 +45,7 @@ const PlayerScreen = ({ route }) => {
           },
         }
       );
-
+    } catch (error) {
       console.log('Skipped to the next track:', response.data);
     } catch (error) {
       console.error('Error skipping to the next track:', error.message);
@@ -56,7 +54,7 @@ const PlayerScreen = ({ route }) => {
 
   const skipPrevious = async () => {
     try {
-      const response = await axios.post(
+      await axios.post(
         'https://api.spotify.com/v1/me/player/previous',
         null,
         {
@@ -66,8 +64,6 @@ const PlayerScreen = ({ route }) => {
           },
         }
       );
-
-      console.log('Skipped to the previous track:', response.data);
     } catch (error) {
       console.error('Error skipping to the previous track:', error.message);
     }
@@ -75,7 +71,7 @@ const PlayerScreen = ({ route }) => {
 
   const adjustVolume = async (volume) => {
     try {
-      const response = await axios.put(
+     await axios.put(
         `https://api.spotify.com/v1/me/player/volume?volume_percent=${volume * 100}`,
         null,
         {
@@ -85,17 +81,17 @@ const PlayerScreen = ({ route }) => {
           },
         }
       );
-
-      console.log('Adjusted volume:', response.data);
     } catch (error) {
       console.error('Error adjusting volume:', error.message);
     }
   };
 
-  const seekForward = async () => {
+  const seek = async (forward = true) => {
+      const position_ms = forward ? 10000 : -10000
+        
     try {
-      const response = await axios.put(
-        'https://api.spotify.com/v1/me/player/seek?position_ms=10000',
+      await axios.put(
+        'https://api.spotify.com/v1/me/player/seek?position_ms=${Math.abs(position_ms)}',
         null,
         {
           headers: {
@@ -104,14 +100,12 @@ const PlayerScreen = ({ route }) => {
           },
         }
       );
-
-      console.log('Seeking forward:', response.data);
     } catch (error) {
-      console.error('Error seeking forward:', error.message);
+      console.error('Error seeking ${forward ? 'forward' : 'backward'}:', error.message);
     }
   };
 
-  const seekBackward = async () => {
+  /* const seekBackward = async () => {
     try {
       const response = await axios.put(
         'https://api.spotify.com/v1/me/player/seek?position_ms=-10000',
@@ -128,7 +122,7 @@ const PlayerScreen = ({ route }) => {
     } catch (error) {
       console.error('Error seeking backward:', error.message);
     }
-  };
+  };*/
 
   useEffect(() => {
     const fetchPlaybackState = async () => {
@@ -139,7 +133,7 @@ const PlayerScreen = ({ route }) => {
           },
         });
 
-        setIsPlaying(response.data.is_playing);
+        setIsPlaying(response.data?.is_playing);
       } catch (error) {
         console.error('Error fetching playback state:', error.message);
       }
@@ -217,13 +211,13 @@ const styles = StyleSheet.create({
   controlsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     width: '80%',
     marginBottom: 20,
   },
   volumeControls: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     width: '80%',
   },
 });
