@@ -56,7 +56,7 @@ const HomeScreen = ({ navigation }) => {
   }, [token]);
 
   const handlePlayButtonPress = (artist) => {
-    navigation.navigate('PlayerScreen', { artist, token }); // Make sure 'PlayerScreen' matches your screen name in the navigator
+    navigation.navigate('PlayerScreen', { artist, token }); 
   };
 
   return (
