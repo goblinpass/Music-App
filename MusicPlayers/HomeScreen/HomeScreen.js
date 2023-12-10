@@ -16,16 +16,17 @@ const HomeScreen = ({ navigation }) => {
       try {
         const response = await axios.post(
           'https://accounts.spotify.com/api/token',
-          `grant_type=client_credentials&client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}`,
+          `grant_type=client_credentials`,
           {
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded',
+              'Authorization': `Basic ${Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64')}`,
             },
           }
         );
         setToken(response.data.access_token);
       } catch (error) {
-        console.error('Error obtaining access token:', error.message);
+        console.error('Error obtaining access token:', error);
       }
     };
 
@@ -40,19 +41,17 @@ const HomeScreen = ({ navigation }) => {
           'https://api.spotify.com/v1/browse/new-releases?country=US&limit=10',
           {
             headers: {
-              'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`,
             },
           }
         );
 
-        if (!response.data.albums?.items) {
-          throw new Error('Invalid response format');
-        }
-
+        //if (!response.data.albums?.items) {
+        // throw new Error('Invalid response format');
+        //}
         setNewReleases(response.data.albums.items);
       } catch (error) {
-        console.error('Error fetching new releases:', error.message);
+        console.error('Error fetching new releases:', error);
       }
     };
 
@@ -62,34 +61,54 @@ const HomeScreen = ({ navigation }) => {
   }, [token]);
 
   const handlePlayButtonPress = (artist) => {
-    navigation.navigate('Player', { artist, token });
+    navigation.navigate('PlayerScreen', { artist, token });
   };
 
   return (
-    <View>
-      <Text>Top 10 New Releases in the US</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Top 10 New Releases in the US</Text>
       <FlatList
         data={newReleases}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <TouchableOpacity onPress={() => navigation.navigate('Player', { artist: item, token })}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+         // <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <TouchableOpacity style={styles.item} onPress={() => handlePlayButtonPress(item)}>
                 <Image
                   source={{ uri: item.images[0]?.url }}
-                  style={{ width: 50, height: 50, borderRadius: 25, marginRight: 10 }}
+                  style={styles.image}
                 />
-                <Text>{item.name}</Text>
-              </View>
+                <Text style={styles.text}>{item.name}</Text>
+                <Text style={styles.text>▶️</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => handlePlayButtonPress(item)}>
-              <Text>▶️</Text>
-            </TouchableOpacity>
-          </View>
         )}
       />
     </View>
   );
 };
-
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  item: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+  },
+  image: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  text: {
+    flex: 1,
+    marginLeft: 10,
+  },
+});
 export default HomeScreen;
